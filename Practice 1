@@ -1,0 +1,35 @@
+--- EX 1
+select NAME from city
+where (CountryCode = 'USA') and (Population > 120000);
+
+--- EX 2
+select * from city
+where countrycode = 'JPN';
+
+--- EX 3
+select city, state from station;
+
+--- EX 4
+select distinct city from station
+where city like 'A%' or city like 'E%' or city like 'I%' or city like 'O%' or city like 'U%';
+
+---EX 5
+select distinct city from station
+where city like '%a' or city like '%e' or city like '%i' or city like '%o' or city like '%u';
+
+--- EX 6
+select distinct city from station
+where city not like 'A%' and city not like 'E%' and city not like 'I%' and city not like 'O%' and city not like 'U%';
+
+--- EX 7
+select name from Employee
+order by name asc;
+
+--- EX 8
+select name from Employee
+where salary > 2000 and months < 10
+order by employee_id asc;
+
+
+
+
