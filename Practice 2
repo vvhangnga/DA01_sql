@@ -21,7 +21,23 @@ WHERE skill IN ('Python', 'Tableau', 'PostgreSQL')
 GROUP BY candidate_id
 HAVING COUNT (skill) = 3
 
+-- EX 6
+SELECT user_id, 
+MAX(DATE(post_date)) - MIN(DATE(post_date)) AS days_between
+FROM posts
+WHERE post_date BETWEEN '2021-01-01' AND '2022-01-01'
+GROUP BY user_id
+HAVING MAX(DATE(post_date)) - MIN(DATE(post_date)) >1;
 
+
+            PAGE'S SOLUTION:
+            SELECT 
+            	user_id, 
+                MAX(post_date::DATE) - MIN(post_date::DATE) AS days_between
+            FROM posts
+            WHERE DATE_PART('year', post_date::DATE) = 2021 
+            GROUP BY user_id
+            HAVING COUNT(post_id)>1;
 
 
 -- EX 7
@@ -41,6 +57,34 @@ GROUP BY manufacturer
 ORDER BY total_loss DESC;
 
 -- EX 9
+select id, movie, description, rating  
+from cinema
+where (id%2 = 1) and description not in ('boring')
+order by rating desc;
+
+-- EX 10
+SELECT  teacher_id,
+COUNT(DISTINCT subject_id) AS CNT
+FROM teacher
+GROUP BY teacher_id;
+
+-- EX 11
+SELECT user_id,
+COUNT(follower_id) AS followers_count
+FROM Followers
+GROUP BY user_id
+ORDER BY user_id;
+
+-- EX 12
+SELECT class
+FROM Courses
+GROUP BY class
+HAVING COUNT(student) >= 5; 
+
+
+
+
+
 
 
 
