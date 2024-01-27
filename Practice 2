@@ -1,5 +1,53 @@
--- 
-
+-- EX 1
 SELECT DISTINCT CITY
 FROM STATION
 WHERE ID%2 = 0;
+
+-- EX 2
+SELECT COUNT (CITY) - COUNT (DISTINCT CITY)
+FROM STATION;
+
+
+
+
+-- EX 4
+SELECT 
+ROUND(CAST (SUM(item_count * order_occurrences) / SUM(order_occurrences) AS DECIMAL), 1) AS MEAN
+FROM items_per_order;
+
+-- EX 5
+SELECT candidate_id FROM candidates
+WHERE skill IN ('Python', 'Tableau', 'PostgreSQL')
+GROUP BY candidate_id
+HAVING COUNT (skill) = 3
+
+
+
+
+-- EX 7
+SELECT card_name, 
+MAX (issued_amount) - MIN(issued_amount)   AS difference 
+FROM monthly_cards_issued
+GROUP BY card_name
+ORDER BY  MAX (issued_amount) - MIN(issued_amount) DESC;
+
+-- EX 8
+SELECT manufacturer,
+ABS(SUM(total_sales - cogs)) AS total_loss,
+COUNT (drug) AS drug_count
+FROM pharmacy_sales
+WHERE (total_sales - cogs) <0 
+GROUP BY manufacturer
+ORDER BY total_loss DESC;
+
+-- EX 9
+
+
+
+
+
+
+
+
+
+
