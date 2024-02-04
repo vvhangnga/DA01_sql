@@ -1,4 +1,5 @@
 -- EX 1
+
 SELECT 
 SUM(CASE 
   WHEN device_type IN ('laptop') THEN 1
@@ -12,3 +13,55 @@ END) AS mobile_views
 FROM viewership;
 
 -- EX 2
+
+SELECT *,
+CASE 
+    WHEN X + Y > Z AND X + Z > Y AND Y + Z > X THEN 'Yes'
+    ELSE 'No'
+END AS triangle
+FROM Triangle;
+
+-- EX 3
+SELECT  
+ROUND((SUM(CASE
+  WHEN call_category IN ('n/a') THEN 1
+  ELSE 0
+END) / COUNT(call_category) )*100 , 1) AS call_percentage
+FROM callers; 
+
+-- EX 4
+select name from Customer
+where  referee_id  <> 2 or referee_id is null;
+
+-- EX 5
+SELECT survived,
+SUM(CASE 
+    WHEN pclass  = 1 THEN 1
+    ELSE 0
+END) AS first_class,
+
+SUM(CASE 
+    WHEN pclass = 2 THEN 1
+    ELSE 0
+END) AS second_class,
+
+SUM(CASE 
+    WHEN pclass = 3 THEN 1
+    ELSE 0
+END) AS third_class
+FROM titanic
+GROUP BY survived;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
