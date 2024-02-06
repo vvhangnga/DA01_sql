@@ -53,6 +53,32 @@ HAVING SUM(CASE
   ELSE 0
 END) > 2
 
+-- EX 5 (???????????)
+SELECT *
+FROM Employees AS A
+LEFT JOIN Employees AS B
+ON A.reports_to = B.employee_id  
+GROUP BY A.employee_id ;
+
+-- EX 6:
+SELECT A.product_name,
+SUM(unit) AS unit 
+FROM Products AS A
+LEFT JOIN Orders AS B
+ON A.product_id = B.product_id 
+WHERE order_date BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY A.product_name
+HAVING SUM(unit) >= 100
+
+-- EX 7:
+SELECT A.page_id
+FROM pages AS A  
+LEFT JOIN page_likes AS B  
+ON A.page_id = B.page_id
+WHERE B.liked_date IS NULL
+ORDER BY A.page_id;
+
+
 
 
 
