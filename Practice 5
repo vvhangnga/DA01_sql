@@ -1,0 +1,15 @@
+
+
+
+-- EX 2:
+SELECT 
+
+ROUND(CAST ( SUM (
+CASE 
+  WHEN B.signup_action IN ('Confirmed') THEN 1
+  ELSE 0
+END) AS DECIMAL) /  COUNT(DISTINCT A.user_id) ,2) AS confirm_rate
+
+FROM EMAILS AS A  
+LEFT JOIN TEXTS AS B  
+ON A.email_id = B.email_id;
