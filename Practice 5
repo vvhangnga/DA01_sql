@@ -78,6 +78,137 @@ ON A.page_id = B.page_id
 WHERE B.liked_date IS NULL
 ORDER BY A.page_id;
 
+--------------------------- MID-COURSE ---------------------------
+
+-- Q1: 
+-- Task: Tạo danh sách tất cả chi phí thay thế (replacement costs )  khác nhau của các film.
+-- Question: Chi phí thay thế thấp nhất là bao nhiêu?
+
+SELECT DISTINCT replacement_cost 
+FROM FILM
+ORDER BY replacement_cost;
+
+-- Q2:
+-- Task: Viết một truy vấn cung cấp cái nhìn tổng quan về số lượng phim có chi phí thay thế trong các phạm vi chi phí sau
+-- 1.	low: 9.99 - 19.99
+-- 2.	medium: 20.00 - 24.99
+-- 3.	high: 25.00 - 29.99
+-- Question: Có bao nhiêu phim có chi phí thay thế thuộc nhóm “low”?
+
+SELECT
+CASE 
+	WHEN replacement_cost <= 19.99 THEN 'LOW'
+	WHEN replacement_cost BETWEEN 20.00 AND 24.99 THEN 'MID'
+	ELSE 'HIGH'
+END AS PHAM_VI,
+COUNT (*) AS SO_LUONG
+FROM FILM
+WHERE replacement_cost <= 19.99
+GROUP BY PHAM_VI;
+
+-- Q3:
+-- Task: Tạo danh sách các film_title  bao gồm tiêu đề (title), độ dài (length) và tên danh mục (category_name) được sắp xếp theo độ dài giảm dần. Lọc kết quả để chỉ các phim trong danh mục 'Drama' hoặc 'Sports'.
+-- Question: Phim dài nhất thuộc thể loại nào và dài bao nhiêu?
+
+/* SELECT * FROM FILM;
+SELECT * FROM FILM_CATEGORY;
+SELECT * FROM CATEGORY; */
+
+SELECT A.FILM_ID, A.TITLE, A.LENGTH , C.NAME
+FROM FILM AS A
+LEFT JOIN FILM_CATEGORY AS B ON A.FILM_ID = B.FILM_ID
+LEFT JOIN CATEGORY AS C ON B.CATEGORY_ID = C.CATEGORY_ID
+WHERE C.NAME = 'Drama' OR C.NAME = 'Sports'
+ORDER BY LENGTH(C.NAME) DESC;
+
+SELECT A.FILM_ID, A.TITLE, A.LENGTH , C.NAME
+FROM FILM AS A
+LEFT JOIN FILM_CATEGORY AS B ON A.FILM_ID = B.FILM_ID
+LEFT JOIN CATEGORY AS C ON B.CATEGORY_ID = C.CATEGORY_ID
+WHERE C.NAME = 'Drama' OR C.NAME = 'Sports'
+ORDER BY LENGTH DESC
+LIMIT 1;
+
+-- Q4:
+-- Task: Đưa ra cái nhìn tổng quan về số lượng phim (tilte) trong mỗi danh mục (category).
+-- Question:Thể loại danh mục nào là phổ biến nhất trong số các bộ phim?
+
+SELECT C.NAME,
+COUNT(*) AS SO_LUONG
+FROM FILM AS A
+LEFT JOIN FILM_CATEGORY AS B ON A.FILM_ID = B.FILM_ID
+LEFT JOIN CATEGORY AS C ON B.CATEGORY_ID = C.CATEGORY_ID
+GROUP BY C.NAME
+ORDER BY SO_LUONG DESC
+LIMIT 1;
+
+-- Q5:
+-- Task:Đưa ra cái nhìn tổng quan về họ và tên của các diễn viên cũng như số lượng phim họ tham gia.
+-- Question: Diễn viên nào đóng nhiều phim nhất?
+
+SELECT * FROM FILM_ACTOR;
+SELECT * FROM ACTOR;
+
+SELECT CONCAT(A.FIRST_NAME, ' ', A.LAST_NAME) AS FULL_NAME,
+COUNT(FILM_ID) AS SO_LUONG
+FROM ACTOR AS A
+LEFT JOIN FILM_ACTOR AS B
+ON A.ACTOR_ID = B.ACTOR_ID
+GROUP BY CONCAT(A.FIRST_NAME, ' ', A.LAST_NAME)
+ORDER BY COUNT(FILM_ID) DESC
+LIMIT 1;
+
+-- Q6:
+-- Task: Tìm các địa chỉ không liên quan đến bất kỳ khách hàng nào.
+-- Question: Có bao nhiêu địa chỉ như vậy?
+
+SELECT * FROM ADDRESS;
+SELECT * FROM CUSTOMER;
+
+SELECT  A.ADDRESS,  COUNT(A.ADDRESS) AS SO_LUONG
+FROM ADDRESS AS A
+LEFT JOIN CUSTOMER AS B
+ON A.ADDRESS_ID = B.ADDRESS_ID
+WHERE B.CUSTOMER_ID IS NULL
+GROUP BY A.ADDRESS;
+
+-- Q7:
+-- Task: Danh sách các thành phố và doanh thu tương ừng trên từng thành phố 
+-- Question:Thành phố nào đạt doanh thu cao nhất?
+
+SELECT * FROM CITY;
+SELECT * FROM COUNTRY; -- city
+SELECT * FROM PAYMENT; -- cus
+SELECT * FROM CUSTOMER; -- add
+SELECT * FROM ADDRESS; -- city
+
+SELECT A.CITY, SUM(D.AMOUNT) AS DOANH_THU
+FROM CITY AS A
+JOIN ADDRESS AS B ON A.CITY_ID = B.CITY_ID
+JOIN CUSTOMER AS C ON B.ADDRESS_ID = C.ADDRESS_ID
+JOIN PAYMENT AS D ON C.CUSTOMER_ID = D.CUSTOMER_ID
+GROUP BY A.CITY
+ORDER BY DOANH_THU DESC
+LIMIT 1;
+
+-- Q8:
+-- Task: Tạo danh sách trả ra 2 cột dữ liệu 
+-- cột 1: thông tin thành phố và đất nước ( format: “city, country") 
+-- cột 2: doanh thu tương ứng với cột 1
+-- Question: thành phố của đất nước nào đat doanh thu cao nhất
+
+SELECT CONCAT(A.CITY,', ', AA.COUNTRY) AS NUOC, 
+SUM(D.AMOUNT) AS DOANH_THU
+FROM CITY AS A
+JOIN COUNTRY AS AA ON A.COUNTRY_ID = AA.COUNTRY_ID
+JOIN ADDRESS AS B ON A.CITY_ID = B.CITY_ID
+JOIN CUSTOMER AS C ON B.ADDRESS_ID = C.ADDRESS_ID
+JOIN PAYMENT AS D ON C.CUSTOMER_ID = D.CUSTOMER_ID
+GROUP BY CONCAT(A.CITY,', ', AA.COUNTRY)
+ORDER BY SUM(D.AMOUNT)
+LIMIT 1;
+
+
 
 
 
