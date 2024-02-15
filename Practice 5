@@ -62,7 +62,7 @@ GROUP BY A.employee_id ;
 
 ĐÁP ÁN:
 SELECT  A.employee_id, A.name, COUNT(B.employee_id) AS reports_count,
-CEILING(AVG(B.age)) AS average_age 
+ROUND(AVG(B.age),0) AS average_age  
 FROM Employees AS A
 INNER JOIN Employees AS B
 ON A.employee_id  = B.reports_to 
