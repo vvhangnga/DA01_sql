@@ -1,0 +1,50 @@
+-- EX 1:
+WITH CTE AS
+(SELECT  company_id, title, description, count(job_id) AS job_count
+FROM job_listings
+GROUP BY company_id, title, description)
+
+SELECT COUNT(*) AS duplicate_companies
+FROM CTE
+WHERE job_count > 1 ; 
+
+-- EX 2:  ?????????????????
+SELECT category, product, SUM(spend) AS total_spend
+FROM product_spend
+WHERE EXTRACT(YEAR FROM transaction_date) = '2022' 
+GROUP BY category, product
+ORDER BY category, total_spend DESC;
+
+
+
+
+-- EX 4: ????????? (OLD)
+SELECT A.page_id
+
+FROM pages AS A  
+LEFT JOIN page_likes AS B  
+ON A.page_id = B.page_id
+WHERE B.liked_date IS NULL
+ORDER BY A.page_id;
+
+
+-- EX 7:
+WITH CTE AS (
+SELECT product_id, MIN(year) AS year
+FROM SALES
+GROUP BY product_id
+)
+
+SELECT B.product_id, B.year AS first_year, A.quantity, A.price
+FROM SALES AS A
+JOIN CTE AS B ON A.product_id = B.product_id AND A.year = B.year
+
+-- EX 8:
+SELECT A.customer_id
+FROM CUSTOMER AS A
+GROUP BY A.customer_id 
+HAVING COUNT(DISTINCT product_key) = (SELECT COUNT(*) FROM PRODUCT)
+
+
+
+
