@@ -15,8 +15,11 @@ WHERE EXTRACT(YEAR FROM transaction_date) = '2022'
 GROUP BY category, product
 ORDER BY category, total_spend DESC;
 
-
-
+-- EX 3:
+SELECT COUNT(DISTINCT policy_holder_id) AS member_count
+FROM callers
+GROUP BY policy_holder_id
+HAVING COUNT(case_id) > 2;
 
 -- EX 4: 
 SELECT A.page_id
@@ -26,6 +29,33 @@ ON A.page_id = B.page_id
 WHERE B.liked_date IS NULL
 ORDER BY A.page_id;
 
+
+-- EX 6:
+WITH 
+CTE_TRANS AS ( 
+SELECT DATE_FORMAT(trans_date,"%Y-%m") as month, country, COUNT(*) AS trans_count, SUM(amount) AS trans_total_amount 
+FROM Transactions 
+GROUP BY month, country
+ ),
+
+CTE_APP AS ( 
+SELECT DATE_FORMAT(trans_date,"%Y-%m") as month, country, 
+SUM(CASE 
+    WHEN state = 'approved' THEN 1
+    ELSE 0
+END) AS approved_count,
+SUM(CASE 
+    WHEN state = 'approved' THEN amount
+    ELSE 0
+END) AS approved_total_amount
+FROM Transactions 
+GROUP BY month, country
+ )
+
+SELECT A.month, A.country, A.trans_count, B.approved_count, A.trans_total_amount, B.approved_total_amount
+FROM CTE_TRANS AS A 
+LEFT JOIN CTE_APP AS B ON A.month = B.month
+GROUP BY A.month, A.country
 
 -- EX 7:
 WITH CTE AS (
