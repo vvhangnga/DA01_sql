@@ -52,7 +52,7 @@ ON A.page_id = B.page_id
 WHERE B.liked_date IS NULL
 ORDER BY A.page_id;
 
--- EX 5: (mình làm ra rồi nhé)
+-- EX 5: 
 WITH 
 THIS_MONTH AS (
 SELECT *
