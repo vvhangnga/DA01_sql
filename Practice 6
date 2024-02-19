@@ -8,12 +8,35 @@ SELECT COUNT(*) AS duplicate_companies
 FROM CTE
 WHERE job_count > 1 ; 
 
--- EX 2:  ?????????????????
+-- EX 2:  
 SELECT category, product, SUM(spend) AS total_spend
 FROM product_spend
 WHERE EXTRACT(YEAR FROM transaction_date) = '2022' 
 GROUP BY category, product
 ORDER BY category, total_spend DESC;
+
+DAP AN:
+WITH CTE1 AS (
+SELECT category, product, SUM(spend) AS total_spend
+FROM product_spend
+WHERE EXTRACT(YEAR FROM transaction_date) = '2022' AND category = 'appliance'
+GROUP BY category, product
+ORDER BY category, total_spend DESC
+LIMIT 2
+),
+
+CTE2 AS ( 
+SELECT category, product, SUM(spend) AS total_spend
+FROM product_spend
+WHERE EXTRACT(YEAR FROM transaction_date) = '2022' AND category = 'electronics'
+GROUP BY category, product
+ORDER BY category, total_spend DESC
+LIMIT 2
+)
+
+SELECT * FROM CTE1
+UNION ALL
+SELECT * FROM CTE2
 
 -- EX 3:
 SELECT COUNT(DISTINCT policy_holder_id) AS member_count
