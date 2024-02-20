@@ -56,7 +56,30 @@ ELSE ROUND((tweet_count + lag1 + lag2)/3.0,2)
 END AS rolling_avg_3d
 FROM CTE 
 
+-- EX 6:
+WITH CTE AS (
+SELECT *,
+LEAD(transaction_timestamp) OVER(ORDER BY transaction_timestamp) AS next_transaction_timestamp,
+EXTRACT(HOUR FROM LEAD(transaction_timestamp) OVER(ORDER BY transaction_timestamp) - transaction_timestamp)*60 +
+EXTRACT(MINUTE FROM (LEAD(transaction_timestamp) OVER(ORDER BY transaction_timestamp) - transaction_timestamp)) AS GAP
+FROM transactions
+ORDER BY transaction_timestamp
+),
+CTE2 AS (
+SELECT *,
+COUNT(transaction_id) OVER(PARTITION BY merchant_id, credit_card_id, amount) AS COUNT
+FROM CTE 
+WHERE GAP <=10
+),
+CTE3 AS (
+SELECT merchant_id, credit_card_id, amount
+FROM CTE2
+WHERE COUNT >=2
+GROUP BY merchant_id, credit_card_id, amount,COUNT
+)
 
+SELECT COUNT(*) AS payment_count
+FROM CTE3
 
 -- EX 7:
 WITH CTE AS (
