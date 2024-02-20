@@ -1,0 +1,96 @@
+-- EX 1:
+WITH CTE AS ( 
+SELECT  EXTRACT (YEAR FROM transaction_date) AS YEAR, product_id, SUM(spend) AS curr_year_spend
+FROM user_transactions
+GROUP BY  EXTRACT (YEAR FROM transaction_date), product_id
+)
+SELECT YEAR, product_id, curr_year_spend, 
+LAG(curr_year_spend) OVER(PARTITION BY product_id ORDER BY YEAR) AS prev_year_spend,
+ROUND(100*(curr_year_spend - (LAG(curr_year_spend) OVER(PARTITION BY product_id ORDER BY YEAR)) ) / (LAG(curr_year_spend) OVER(PARTITION BY product_id ORDER BY YEAR)),2) AS yoy_rate
+FROM CTE
+ORDER BY product_id, YEAR
+
+-- EX 2:
+WITH CTE AS ( 
+SELECT card_name, issued_amount, issue_month, issue_year,
+RANK() OVER(PARTITION BY card_name ORDER BY issue_year, issue_month) AS RANK
+FROM monthly_cards_issued
+ORDER BY issue_year,  issue_month
+)
+SELECT card_name, issued_amount  FROM CTE 
+WHERE RANK = '1'
+
+-- EX 3:
+WITH CTE AS (
+SELECT *,
+RANK() OVER(PARTITION BY user_id ORDER BY transaction_date) AS RANK
+FROM transactions
+) 
+SELECT user_id,  spend, transaction_date
+FROM CTE 
+WHERE RANK = '3'
+
+-- EX 4:
+WITH CTE AS (
+SELECT *,
+RANK() OVER(PARTITION BY user_id ORDER BY transaction_date DESC) AS RANK
+FROM user_transactions
+)
+SELECT transaction_date, user_id, COUNT(*) AS purchase_count
+FROM CTE 
+WHERE RANK = '1'
+GROUP BY transaction_date, user_id;
+
+-- EX 5:
+WITH CTE AS (
+SELECT * ,
+LAG(tweet_count) OVER(PARTITION BY user_id ORDER BY tweet_date) AS LAG1,
+LAG(tweet_count,2) OVER(PARTITION BY user_id ORDER BY tweet_date) AS LAG2
+FROM tweets
+)
+SELECT user_id, tweet_date,
+CASE 
+WHEN lag1 IS NULL AND lag2 IS NULL THEN ROUND(tweet_count,2)
+WHEN lag2 IS NULL THEN ROUND((tweet_count + lag1)/2.0,2)
+ELSE ROUND((tweet_count + lag1 + lag2)/3.0,2)
+END AS rolling_avg_3d
+FROM CTE 
+
+
+
+-- EX 7:
+WITH CTE AS (
+SELECT category, product,
+SUM(spend) AS TOTAL_SPEND,
+RANK() OVER (PARTITION BY category ORDER BY SUM(spend) DESC) AS RANK 
+FROM product_spend
+WHERE EXTRACT(YEAR FROM transaction_date) = '2022'
+GROUP BY category, product
+)
+SELECT category, product,total_spend
+FROM CTE 
+WHERE RANK <= 2
+
+-- EX 8:
+WITH CTE AS (
+SELECT A.day, A.song_id, A.rank, B.artist_id, B.name, C.artist_name, C.label_owner
+FROM global_song_rank AS A
+JOIN songs AS B ON A.song_id = B.song_id
+JOIN artists AS C ON B.artist_id = C.artist_id
+WHERE RANK <= 10
+),
+
+CTE2 AS (
+SELECT artist_name, 
+DENSE_RANK() OVER( ORDER BY COUNT(song_id) DESC) AS artist_rank
+FROM CTE
+GROUP BY artist_name 
+)
+
+SELECT artist_name, artist_rank
+FROM CTE2 
+WHERE artist_rank <= 5
+
+
+
+
