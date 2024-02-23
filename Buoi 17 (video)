@@ -1,0 +1,50 @@
+--- DDL
+CREATE TABLE manager 
+(
+	manager_id INT PRIMARY KEY,
+	user_name varchar(20) UNIQUE,
+	first_name varchar(20) DEFAULT 'NO INFO',
+	last_name varchar(20),
+	date_of_birth DATE,
+	address_id INT
+)
+DROP TABLE manager
+
+-- lưu kết quả vừa truy vấn ra vô database.
+-- lấy DS khách hàng và địa chỉ => lưu vào bảng tên là customer_info
+
+CREATE TABLE customer_info AS
+(
+SELECT CUSTOMER_ID, FIRST_NAME || ' ' || LAST_NAME AS FULL_NAME,
+EMAIL, B.ADDRESS
+FROM CUSTOMER AS A
+JOIN ADDRESS AS B ON A.ADDRESS_ID = B.ADDRESS_ID);
+
+SELECT * FROM customer_info
+
+--- VIEW
+CREATE OR REPLACE VIEW vw_customer_info AS
+(
+SELECT CUSTOMER_ID, FIRST_NAME || ' ' || LAST_NAME AS FULL_NAME,
+EMAIL, B.ADDRESS, A.ACTIVE
+FROM CUSTOMER AS A
+JOIN ADDRESS AS B ON A.ADDRESS_ID = B.ADDRESS_ID);
+
+--- DML: INSERT
+SELECT * FROM CITY
+WHERE CITY_ID =  1000
+
+INSERT INTO CITY 
+VALUES (1000, 'A', 44, '2020-01-01 16:10:20')
+
+
+--- DML: UPDATE
+TRUNCATE TABLE manager
+
+
+
+
+
+
+
+
