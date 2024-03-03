@@ -1,0 +1,116 @@
+
+-- 1. Chuyển đổi kiểu dữ liệu phù hợp cho các trường ( sử dụng câu lệnh ALTER) 
+
+select * from public.sales_dataset_rfm_prj;
+alter table sales_dataset_rfm_prj alter column ordernumber type numeric using (trim(ordernumber)::numeric) ;
+alter table sales_dataset_rfm_prj alter column quantityordered type numeric using (trim(quantityordered)::numeric) ;
+alter table sales_dataset_rfm_prj alter column priceeach type numeric using (trim(priceeach)::numeric) ;
+alter table sales_dataset_rfm_prj alter column orderlinenumber type numeric using (trim(orderlinenumber)::numeric) ;
+alter table sales_dataset_rfm_prj alter column sales type numeric using (trim(sales)::numeric) ;
+alter table sales_dataset_rfm_prj alter column status type text using (trim(status)::text) ;
+alter table sales_dataset_rfm_prj alter column productline type text using (trim(productline)::text) ;
+alter table sales_dataset_rfm_prj alter column msrp type numeric using (trim(msrp)::numeric) ;
+alter table sales_dataset_rfm_prj alter column productcode type text using (trim(productcode)::text) ;
+alter table sales_dataset_rfm_prj alter column customername type text using (trim(customername)::text) ;
+alter table sales_dataset_rfm_prj alter column phone type text using (trim(phone)::text) ;
+alter table sales_dataset_rfm_prj alter column addressline1 type text using (trim(addressline1)::text) ;
+alter table sales_dataset_rfm_prj alter column addressline2 type text using (trim(addressline2)::text) ;
+alter table sales_dataset_rfm_prj alter column city type text using (trim(city)::text) ;
+alter table sales_dataset_rfm_prj alter column state type text using (trim(state)::text) ;
+alter table sales_dataset_rfm_prj alter column postalcode type text using (trim(postalcode)::text) ;
+alter table sales_dataset_rfm_prj alter column country type text using (trim(country)::text) ;
+alter table sales_dataset_rfm_prj alter column territory type text using (trim(territory)::text) ;
+alter table sales_dataset_rfm_prj alter column contactfullname type text using (trim(contactfullname)::text) ;
+alter table sales_dataset_rfm_prj alter column dealsize type text using (trim(dealsize)::text) ;
+
+update  sales_dataset_rfm_prj 
+set orderdate = left(orderdate, length(orderdate) - 5);
+
+alter table sales_dataset_rfm_prj alter column orderdate type text using (trim(orderdate)::text) ;
+
+-- 2. Check NULL/BLANK (‘’)  ở các trường: ORDERNUMBER, QUANTITYORDERED, PRICEEACH, ORDERLINENUMBER, SALES, ORDERDATE.
+select *
+from sales_dataset_rfm_prj
+where ORDERDATE is null;
+
+-- 3. Thêm cột CONTACTLASTNAME, CONTACTFIRSTNAME được tách ra từ CONTACTFULLNAME
+
+with cte as (
+select *,
+left(contactfullname, position('-' in contactfullname) -1) as last,
+right( contactfullname, length(contactfullname) - position('-' in contactfullname)) as first 
+from sales_dataset_rfm_prj
+	)
+/*
+select *,
+upper(left(last,1))||right(last, length(last) - 1 ) as CONTACTLASTNAME,
+upper(left(first,1))||right(first, length(first) - 1 ) as CONTACFIRSTNAME
+from cte;
+*/
+
+ALTER TABLE sales_dataset_rfm_prj
+ADD COLUMN CONTACTLASTNAME TEXT;
+ALTER TABLE sales_dataset_rfm_prj
+ADD COLUMN CONTACFIRSTNAME TEXT;
+
+UPDATE sales_dataset_rfm_prj
+SET CONTACTLASTNAME = left(contactfullname, position('-' in contactfullname) -1);
+UPDATE sales_dataset_rfm_prj
+SET CONTACFIRSTNAME = right( contactfullname, length(contactfullname) - position('-' in contactfullname));
+UPDATE sales_dataset_rfm_prj
+SET CONTACTLASTNAME = upper(left(CONTACTLASTNAME,1))||right(CONTACTLASTNAME, length(CONTACTLASTNAME) - 1 );
+UPDATE sales_dataset_rfm_prj
+SET CONTACFIRSTNAME = upper(left(CONTACFIRSTNAME,1))||right(CONTACFIRSTNAME, length(CONTACFIRSTNAME) - 1 );
+
+-- 4. Thêm cột QTR_ID, MONTH_ID, YEAR_ID lần lượt là Qúy, tháng, năm được lấy ra từ ORDERDATE 
+
+ALTER TABLE sales_dataset_rfm_prj
+ADD COLUMN QTR_ID NUMERIC;
+ALTER TABLE sales_dataset_rfm_prj
+ADD COLUMN MONTH_ID NUMERIC;
+ALTER TABLE sales_dataset_rfm_prj
+ADD COLUMN YEAR_ID NUMERIC;
+
+UPDATE sales_dataset_rfm_prj
+SET QTR_ID = EXTRACT(QUARTER FROM ORDERDATE);
+UPDATE sales_dataset_rfm_prj
+SET MONTH_ID = EXTRACT(MONTH FROM ORDERDATE);
+UPDATE sales_dataset_rfm_prj
+SET YEAR_ID = EXTRACT(YEAR FROM ORDERDATE);
+
+-- 5. Hãy tìm outlier (nếu có) cho cột QUANTITYORDERED và hãy chọn cách xử lý cho bản ghi đó (2 cách) ( Không chạy câu lệnh trước khi bài được review)
+
+--- CÁCH 1:
+WITH CTE AS (
+SELECT Q1-1.5*IQR AS MIN, 
+Q3+1.5*IQR AS MAX
+FROM (
+SELECT 
+PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY quantityordered) AS Q1,
+PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY quantityordered) AS Q3,
+PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY quantityordered) - PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY quantityordered) AS IQR
+FROM sales_dataset_rfm_prj)
+	 AS A)
+	 	 
+SELECT * FROM sales_dataset_rfm_prj
+WHERE quantityordered < (SELECT MIN FROM CTE)
+OR  quantityordered > (SELECT MAX FROM CTE)
+
+--- CÁCH 2:
+SELECT AVG(quantityordered), STDDEV(quantityordered)
+FROM sales_dataset_rfm_prj;
+
+WITH CTE1 AS (
+SELECT 
+quantityordered, 
+(SELECT AVG(quantityordered) FROM sales_dataset_rfm_prj) AS AVG,
+(SELECT STDDEV(quantityordered) FROM sales_dataset_rfm_prj) AS STD
+FROM sales_dataset_rfm_prj )
+
+SELECT  quantityordered, (quantityordered-AVG)/STD AS Z_SCORE
+FROM CTE1
+WHERE ABS((quantityordered-AVG)/STD) > 3
+
+-- 6. Sau khi làm sạch dữ liệu, hãy lưu vào bảng mới tên là SALES_DATASET_RFM_PRJ_CLEAN
+-- wait review
+SELECT * FROM sales_dataset_rfm_prj;
