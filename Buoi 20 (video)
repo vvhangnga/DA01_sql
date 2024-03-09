@@ -1,0 +1,109 @@
+--- SELECT * FROM online_retail
+
+/* B1: Khám phá và clean data: 541909 ROWS, 135080 NULL CUSTOMERID, 
+- Trường nào quan tâm?
+- Check null: INVOICENO, STOCKCODE, CUSTOMERID
+- Change data type, Số tiền và số lượng >0 
+- Check dup */
+
+ -- set datestyle = mdy
+
+	WITH CTE AS (
+	SELECT  
+	invoiceno, 
+	stockcode, 
+	description,
+	CAST(quantity AS INT) AS quantity,
+	CAST(invoicedate AS TIMESTAMP) AS invoicedate,
+	CAST(unitprice AS NUMERIC) AS unitprice,
+	customerid,
+	country
+	FROM online_retail
+	WHERE CUSTOMERID <> '' 
+	and CAST(quantity AS INT) > 0 AND CAST(unitprice AS NUMERIC) > 0
+		),
+
+	CTE1 AS (
+	-- ONLY LẤY KO DUPLICATE
+	SELECT * FROM 
+		(SELECT *,
+		ROW_NUMBER() OVER (PARTITION BY invoicedate, stockcode, quantity ORDER BY invoicedate)
+		AS STT
+		FROM CTE ) AS T
+	WHERE STT  = 1), 
+	
+/* B2:
+- tìm ngày mua hàng đầu tiên của mỗi KH => cohort_date
+- tìm index = tháng (ngày mua hàng = ngày đầu + 1)
+- count SL KH hoặc tổng DT tại mỗi cohort_date và index tương ứng
+- pivot table */
+CTE2 as (
+SELECT customerid, amount, 
+to_char(first_pur_date, 'yyyy-mm') as cohort_date,
+invoicedate,
+(extract('year' from invoicedate) - extract('year' from first_pur_date)) * 12 
++ (extract('month' from invoicedate) - extract('month' from first_pur_date)) + 1 as index
+FROM 
+	(
+	SELECT customerid, 
+	unitprice*unitprice as AMOUNT, 
+	min(invoicedate) over(partition by customerid) as first_pur_date,
+	invoicedate 
+	FROM CTE1 ) AS A 
+),
+xxx as (
+select 	cohort_date,
+index, 
+count(distinct customerid) as cnt,
+sum(amount) as revenue
+from cte2
+group by cohort_date, index), 
+
+
+/* B3: pivot -> cohort chart */
+-- customer cohort
+customer_cohort as (
+select 
+cohort_date, 
+sum(case when index = 1 then cnt else 0 end ) as m1,
+sum(case when index = 2 then cnt else 0 end ) as m2,
+sum(case when index = 3 then cnt else 0 end ) as m3,
+sum(case when index = 4 then cnt else 0 end ) as m4,
+sum(case when index = 5 then cnt else 0 end ) as m5,
+sum(case when index = 6 then cnt else 0 end ) as m6,
+sum(case when index = 7 then cnt else 0 end ) as m7,
+sum(case when index = 8 then cnt else 0 end ) as m8,
+sum(case when index = 9 then cnt else 0 end ) as m9,
+sum(case when index = 10 then cnt else 0 end ) as m10,
+sum(case when index = 11 then cnt else 0 end ) as m11,
+sum(case when index = 12 then cnt else 0 end ) as m12,
+sum(case when index = 13 then cnt else 0 end ) as m13
+from xxx 
+group by cohort_date
+order by cohort_date
+)
+-- retention cohort
+
+select cohort_date,
+round(100.00* m1/m1,2) || '%' as m1,
+round(100.00* m2/m1,2) || '%' as m2,
+round(100.00* m3/m1,2) || '%' as m3,
+round(100.00* m4/m1,2) || '%' as m4,
+round(100.00* m5/m1,2) || '%' as m5,
+round(100.00* m6/m1,2) || '%' as m6,
+round(100.00* m7/m1,2) || '%' as m7,
+round(100.00* m8/m1,2) || '%' as m8,
+round(100.00* m9/m1,2) || '%' as m9,
+round(100.00* m10/m1,2) || '%' as m10,
+round(100.00* m11/m1,2) || '%' as m11,
+round(100.00* m12/m1,2) || '%' as m12,
+round(100.00* m13/m1,2) || '%' as m13
+from customer_cohort
+
+-- churn cohort: lấy 100% - retention
+
+
+
+	
+	
+	
