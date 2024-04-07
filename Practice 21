@@ -10,5 +10,22 @@ order by 1
 
 => số lượng người mua và số lượng đơn hàng đều tăng dần theo các tháng và năm.
 
+2. Thống kê giá trị đơn hàng trung bình và tổng số người dùng khác nhau mỗi tháng 
+
+select EXTRACT (year FROM CREATED_AT) || '-' || EXTRACT (month FROM CREATED_AT) as month_year, 
+count(distinct user_id) as total_user, 
+sum(sale_price)/count(distinct order_id) as average_order_value 
+from bigquery-public-data.thelook_ecommerce.order_items
+where created_at between '2019-01-01' and '2022-04-30'
+group by 1
+order by 1
+
+=> giá trị trung bình của các tháng không ổn định trong năm. nhưng nhìn tổng thể các năm, các năm về sau 2021, 2022, giá trị trung bình thấp hơn các năm đầu.
+
+
+
+
+
+
 
 
