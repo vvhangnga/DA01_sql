@@ -36,6 +36,22 @@ from bigquery-public-data.thelook_ecommerce.users
 where created_at between '2019-01-01' and '2022-04-30') as A
 where A.STT = 1
 
+4. Thống kê top 5 sản phẩm có lợi nhuận cao nhất từng tháng (xếp hạng cho từng sản phẩm). 
+with CTE as (
+select *, dense_rank() over(partition by month_year order by profit desc) rank_per_month
+from (
+select EXTRACT (year FROM A.CREATED_AT) || '-' || EXTRACT (month FROM A.CREATED_AT) as month_year,
+A.product_id as product_id, 
+B.name as product_name,  
+B.retail_price as sales, B.cost as cost, B.retail_price - B.cost as profit
+from bigquery-public-data.thelook_ecommerce.order_items as A
+left join bigquery-public-data.thelook_ecommerce.products as B
+on A.product_id = B.id) 
+)
+select * from CTE
+where rank_per_month in (1,2,3,4,5)
+
+
 
 https://console.cloud.google.com/bigquery?p=bigquery-public-data&d=thelook_ecommerce&page=dataset&project=vigilant-balm-419612&ws=!1m13!1m8!1m3!1svigilant-balm-419612!2sbquxjob_55a5c5eb_18eb90e9c1b!3sUS!14m3!1svigilant-balm-419612!2sbquxjob_34cf6f79_18eb91637b2!3sUS!1m3!3m2!1sbigquery-public-data!2sthelook_ecommerce
 
