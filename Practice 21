@@ -22,6 +22,19 @@ order by 1
 
 => giá trị trung bình của các tháng không ổn định trong năm. nhưng nhìn tổng thể các năm, các năm về sau 2021, 2022, giá trị trung bình thấp hơn các năm đầu.
 
+3. Tìm các khách hàng có trẻ tuổi nhất và lớn tuổi nhất theo từng giới tính ( Từ 1/2019-4/2022)
+
+select * from 
+(select first_name, last_name, gender, age, rank() over (partition by gender order by age) as STT, 'youngest' as tag
+from bigquery-public-data.thelook_ecommerce.users
+where created_at between '2019-01-01' and '2022-04-30') as A
+where A.STT = 1
+UNION ALL
+select * from 
+(select first_name, last_name, gender, age, rank() over (partition by gender order by age desc) as STT, 'oldest' as tag
+from bigquery-public-data.thelook_ecommerce.users
+where created_at between '2019-01-01' and '2022-04-30') as A
+where A.STT = 1
 
 
 https://console.cloud.google.com/bigquery?p=bigquery-public-data&d=thelook_ecommerce&page=dataset&project=vigilant-balm-419612&ws=!1m13!1m8!1m3!1svigilant-balm-419612!2sbquxjob_55a5c5eb_18eb90e9c1b!3sUS!14m3!1svigilant-balm-419612!2sbquxjob_34cf6f79_18eb91637b2!3sUS!1m3!3m2!1sbigquery-public-data!2sthelook_ecommerce
