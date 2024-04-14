@@ -1,0 +1,20 @@
+link view: https://console.cloud.google.com/bigquery?p=bigquery-public-data&d=thelook_ecommerce&page=dataset&project=vigilant-balm-419612&ws=!1m8!1m3!8m2!1s1088641834976!2s63e743cd03d24824869e8aee0ff6a7ed!1m3!3m2!1sbigquery-public-data!2sthelook_ecommerce
+
+with CTE as (
+select EXTRACT (year FROM A.CREATED_AT) || '-' || EXTRACT (month FROM A.CREATED_AT) as year_month, 
+EXTRACT (year FROM A.CREATED_AT) as year, EXTRACT (month FROM A.CREATED_AT) as month,
+sum(B.sale_price) as TPV,
+count(distinct B.order_id) as TPO,
+sum(C.cost) as total_cost,
+sum(B.sale_price) - sum(C.cost) as total_profit
+from bigquery-public-data.thelook_ecommerce.orders as A
+inner join bigquery-public-data.thelook_ecommerce.order_items as B on A.order_id = B.order_id
+inner join bigquery-public-data.thelook_ecommerce.products as C on B.product_id = C.id
+group by EXTRACT (year FROM A.CREATED_AT) ||'-'|| EXTRACT (month FROM A.CREATED_AT), EXTRACT (year FROM A.CREATED_AT), EXTRACT (month FROM A.CREATED_AT)
+)
+select *, round( (TPV - LAG(TPV) OVER(ORDER BY year,month))/ LAG(TPV) OVER(ORDER BY year,month) , 2) AS rev_growth,
+          round( (TPO - LAG(TPO) OVER(ORDER BY year,month))/ LAG(TPO) OVER(ORDER BY year,month) , 2) AS order_growth,
+          round( total_profit/total_cost , 2) AS profit_to_cost_ratio
+from CTE
+order by year, month
+
